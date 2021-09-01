@@ -34,11 +34,16 @@ if (interface_exists('\Symfony\Component\Security\Core\User\AdvancedUserInterfac
 }
 
 /**
+ * Implementations of that interface must be serializable. The mechanism
+ * being used to support serialization is up for the implementation.
+ * The serialized data must contain all the fields involved in comparing
+ * the user in the security component.
+ *
  * @author Thibault Duplessis <thibault.duplessis@gmail.com>
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  * @author Julian Finkler <julian@developer-heaven.de>
  */
-interface UserInterface extends CompatUserInterface, \Serializable
+interface UserInterface extends CompatUserInterface
 {
     public const ROLE_DEFAULT = 'ROLE_USER';
 

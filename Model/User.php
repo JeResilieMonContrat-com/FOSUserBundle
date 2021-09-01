@@ -21,7 +21,7 @@ use Symfony\Component\Security\Core\User\UserInterface as BaseUserInterface;
  * @author Thibault Duplessis <thibault.duplessis@gmail.com>
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-abstract class User implements UserInterface, GroupableInterface
+abstract class User implements UserInterface, GroupableInterface, \Serializable
 {
     /**
      * @var mixed
@@ -118,29 +118,9 @@ abstract class User implements UserInterface, GroupableInterface
         return (string) $this->getUsername();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function addRole($role)
+    public function __serialize(): array
     {
-        $role = strtoupper($role);
-        if ($role === static::ROLE_DEFAULT) {
-            return $this;
-        }
-
-        if (!in_array($role, $this->roles, true)) {
-            $this->roles[] = $role;
-        }
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function serialize()
-    {
-        return serialize([
+        return [
             $this->password,
             $this->salt,
             $this->usernameCanonical,
@@ -149,16 +129,11 @@ abstract class User implements UserInterface, GroupableInterface
             $this->id,
             $this->email,
             $this->emailCanonical,
-        ]);
+        ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function unserialize($serialized)
+    public function __unserialize(array $data): void
     {
-        $data = unserialize($serialized);
-
         if (13 === count($data)) {
             // Unserializing a User object from 1.3.x
             unset($data[4], $data[5], $data[6], $data[9], $data[10]);
@@ -178,7 +153,40 @@ abstract class User implements UserInterface, GroupableInterface
             $this->id,
             $this->email,
             $this->emailCanonical
-        ) = $data;
+            ) = $data;
+    }
+
+    /**
+     * @internal
+     */
+    final public function serialize()
+    {
+        return serialize($this->__serialize());
+    }
+
+    /**
+     * @internal
+     */
+    final public function unserialize($serialized)
+    {
+        $this->__unserialize(unserialize($serialized));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addRole($role)
+    {
+        $role = strtoupper($role);
+        if ($role === static::ROLE_DEFAULT) {
+            return $this;
+        }
+
+        if (!in_array($role, $this->roles, true)) {
+            $this->roles[] = $role;
+        }
+
+        return $this;
     }
 
     /**
